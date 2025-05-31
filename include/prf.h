@@ -15,8 +15,17 @@ struct PRFKeys
     EVP_CIPHER_CTX *prf_key_ext;
 };
 
+struct PRFKeysZ
+{
+    EVP_CIPHER_CTX **prf_key;
+    EVP_CIPHER_CTX *prf_key_ext;
+};
+
 void PRFKeyGen(struct PRFKeys *prf_keys);
 void DestroyPRFKey(struct PRFKeys *prf_keys);
+
+void PRFKeyGenZ(struct PRFKeysZ *prf_keys_z, const size_t base);
+void DestroyPRFKeyZ(struct PRFKeysZ *prf_keys_z, const size_t base);
 
 // XOR with input to prevent inversion using Davies–Meyer construction
 static inline void PRFEval(EVP_CIPHER_CTX *ctx, uint128_t *input, uint128_t *outputs)

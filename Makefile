@@ -1,6 +1,6 @@
 TARGET = ./bin/test 
 CC = gcc 
-CFLAGS = -O3 -I./include -I/opt/homebrew/opt/openssl/include
+CFLAGS += -std=c99 -O3 -I./include -I/usr/include/openssl/
 LDFLAGS = -march=native -lcrypto -lssl -lm -maes -ffast-math
 
 SOURCES = $(wildcard ./src/*.c)

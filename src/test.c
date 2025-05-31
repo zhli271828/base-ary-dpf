@@ -10,7 +10,7 @@
 #include "dpf.h"
 #include "utils.h"
 
-#define FULLEVALDOMAIN 14
+#define FULLEVALDOMAIN 10
 #define MESSAGESIZE 2
 #define MAXRANDINDEX ipow(3, FULLEVALDOMAIN)
 
@@ -18,6 +18,11 @@ size_t randIndex()
 {
     srand(time(NULL));
     return ((size_t)rand()) % ((size_t)MAXRANDINDEX);
+}
+
+size_t randIndexZ(const size_t base) {
+    // srand(time(NULL));
+    return ((size_t)rand()) % ((size_t)ipow(base, FULLEVALDOMAIN));
 }
 
 uint128_t randMsg()
@@ -298,58 +303,83 @@ double benchmarkAES()
     return time_taken;
 }
 
+double testDPFZ()
+{
+    const size_t base = 7;
+    const size_t size = FULLEVALDOMAIN; // evaluation will result in base^size points
+    const size_t msg_len = MESSAGESIZE;
+
+    size_t num_leaves = ipow(base, size);
+
+    size_t secret_index = randIndexZ(base);
+    printf("secret_index=%zu\n", secret_index);
+
+    // sample a random message of size msg_len
+    uint128_t *secret_msg = malloc(sizeof(uint128_t) * msg_len);
+    for (size_t i = 0; i < msg_len; i++)
+        secret_msg[i] = randMsg();
+
+    struct PRFKeysZ *prf_keys_z = malloc(sizeof(struct PRFKeysZ));
+    PRFKeyGenZ(prf_keys_z, base);
+
+    struct DPFKeyZ *kA = malloc(sizeof(struct DPFKeyZ));
+    struct DPFKeyZ *kB = malloc(sizeof(struct DPFKeyZ));
+
+    DPFGenZ(base, prf_keys_z, size, secret_index, secret_msg, msg_len, kA, kB);
+
+    uint128_t *shares0 = malloc(sizeof(uint128_t) * num_leaves * msg_len);
+    uint128_t *shares1 = malloc(sizeof(uint128_t) * num_leaves * msg_len);
+    uint128_t *cache = malloc(sizeof(uint128_t) * num_leaves * msg_len);
+
+    //************************************************
+    // Test full domain evaluation
+    //************************************************
+
+    DPFFullDomainEvalZ(base, kA, cache, shares0);
+
+    clock_t t;
+    t = clock();
+    DPFFullDomainEvalZ(base, kB, cache, shares1);
+    t = clock() - t;
+    double time_taken = ((double)t) / (CLOCKS_PER_SEC / 1000.0); // ms
+
+    printf("Time %f ms\n", time_taken);
+
+    // printOutputShares(shares0, shares1, num_leaves, msg_len);
+
+    testOutputCorrectness(
+        shares0,
+        shares1,
+        num_leaves,
+        secret_index,
+        secret_msg,
+        msg_len);
+
+    DestroyPRFKeyZ(prf_keys_z, base);
+
+    free(kA);
+    free(kB);
+    free(shares0);
+    free(shares1);
+    free(cache);
+
+    return time_taken;
+}
+
 int main(int argc, char **argv)
 {
-
     double time = 0;
     int testTrials = 3;
 
     printf("******************************************\n");
-    printf("Testing DPF.FullEval\n");
+    printf("Testing DPF.FullEvalZ\n");
     for (int i = 0; i < testTrials; i++)
     {
-        time += testDPF();
+        time += testDPFZ();
         printf("Done with trial %i of %i\n", i + 1, testTrials);
     }
     printf("******************************************\n");
     printf("PASS\n");
-    printf("DPF.FullEval: (avg time) %0.2f ms\n", time / testTrials);
-    printf("******************************************\n\n");
-
-    time = 0;
-    printf("******************************************\n");
-    printf("Testing HalfDPF.FullEval\n");
-    for (int i = 0; i < testTrials; i++)
-    {
-        time += testHalfDPF();
-        printf("Done with trial %i of %i\n", i + 1, testTrials);
-    }
-    printf("******************************************\n");
-    printf("PASS\n");
-    printf("HalfDPF.FullEval: (avg time) %0.2f ms\n", time / testTrials);
-    printf("******************************************\n\n");
-
-    time = 0;
-    printf("******************************************\n");
-    printf("Benchmarking DPF.Gen\n");
-    for (int i = 0; i < testTrials; i++)
-    {
-        time += benchmarkGen();
-        printf("Done with trial %i of %i\n", i + 1, testTrials);
-    }
-    printf("******************************************\n");
-    printf("Avg time: %0.4f ms\n", time / testTrials);
-    printf("******************************************\n\n");
-
-    time = 0;
-    printf("******************************************\n");
-    printf("Benchmarking AES\n");
-    for (int i = 0; i < testTrials; i++)
-    {
-        time += benchmarkAES();
-        printf("Done with trial %i of %i\n", i + 1, testTrials);
-    }
-    printf("******************************************\n");
-    printf("Avg time: %0.2f ms\n", time / testTrials);
+    printf("DPF.FullEvalZ: (avg time) %0.2f ms\n", time / testTrials);
     printf("******************************************\n\n");
 }

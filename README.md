@@ -1,6 +1,6 @@
 # Ternary-tree DPF Implementation
 
-A simple C implementation of Distributed Point Functions (DPFs) with several performance optimizations.
+A simple C implementation of Distributed Point Functions (DPFs) for $\mathbb{Z}^n_{base}$.
 
 Optimizations include:
 

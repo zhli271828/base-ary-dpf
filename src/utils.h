@@ -62,4 +62,16 @@ static inline int ipow(int base, int exp)
     return result;
 }
 
+static inline int get_septit(const size_t base, uint64_t x, int size, int t)
+{
+    int septary[size];
+    for (int i = 0; i < size; i++)
+    {
+        septary[i] = x % base;
+        x /= base;
+    }
+
+    return septary[t];
+}
+
 #endif
