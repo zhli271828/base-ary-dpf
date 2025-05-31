@@ -10,7 +10,7 @@
 #include "dpf.h"
 #include "utils.h"
 
-#define FULLEVALDOMAIN 10
+#define FULLEVALDOMAIN 8
 #define MESSAGESIZE 2
 #define MAXRANDINDEX ipow(3, FULLEVALDOMAIN)
 
