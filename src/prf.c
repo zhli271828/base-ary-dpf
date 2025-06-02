@@ -47,11 +47,11 @@ void PRFKeyGen(struct PRFKeys *prf_keys)
 void PRFKeyGenZ(struct PRFKeysZ *prf_keys_z, const size_t base)
 {
     prf_keys_z->prf_key = malloc(sizeof(EVP_CIPHER_CTX *)*base);
-    uint8_t **keys = malloc(sizeof(uint128_t*)*base);
+    // TODO: change this to a single pointer
     for (size_t i = 0; i < base; ++i) {
-        keys[i] = malloc(sizeof(uint128_t));
-        RAND_bytes(keys[i], sizeof(uint128_t));
-        prf_keys_z->prf_key[i] = InitKey(keys[i]);
+        uint8_t *key = malloc(sizeof(uint128_t));
+        RAND_bytes(key, sizeof(uint128_t));
+        prf_keys_z->prf_key[i] = InitKey(key);
     }
 
     uint8_t *key_ext = malloc(sizeof(uint128_t));
@@ -76,5 +76,6 @@ void DestroyPRFKeyZ(struct PRFKeysZ *prf_keys_z, const size_t base)
         EVP_CIPHER_CTX_free(prf_keys_z->prf_key[i]);
     }
     EVP_CIPHER_CTX_free(prf_keys_z->prf_key_ext);
+    free(prf_keys_z->prf_key);
     free(prf_keys_z);
 }

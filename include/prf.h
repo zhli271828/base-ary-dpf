@@ -21,6 +21,8 @@ struct PRFKeysZ
     EVP_CIPHER_CTX *prf_key_ext;
 };
 
+EVP_CIPHER_CTX *InitKey(uint8_t *key);
+
 void PRFKeyGen(struct PRFKeys *prf_keys);
 void DestroyPRFKey(struct PRFKeys *prf_keys);
 
